@@ -8,7 +8,7 @@
 import { ref } from 'vue';
 import ItemsGrid from './components/ItemsGrid.vue';
 import { mockItems } from './stores/mock';
-import { TreeStore } from './stores/TreeStore';
+import { TreeStore } from './stores/treeStore';
 
 const treeStore = ref(new TreeStore(mockItems));
 

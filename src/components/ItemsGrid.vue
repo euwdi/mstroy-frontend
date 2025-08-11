@@ -1,6 +1,7 @@
 <template>
   <div class="tree-container">
-    <ag-grid-vue class="ag-theme-alpine" 
+    <ag-grid-vue 
+      class="ag-theme-alpine" 
       :columnDefs="columnDefs" 
       :rowData="rowData" 
       :defaultColDef="defaultColDef"
@@ -8,53 +9,59 @@
       :getDataPath="getDataPath" 
       :autoGroupColumnDef="autoGroupColumnDef"
       :groupDefaultExpanded="groupDefaultExpanded" 
-      :animateRows="true" @grid-ready="onGridReady" />
+      :animateRows="true" 
+      @grid-ready="onGridReady" 
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { TreeStore } from '../stores/TreeStore'
+import type { ITreeStore, Item } from '@/types/tree';
+import { AgGridVue } from 'ag-grid-vue3';
+import type {
+  ColDef,
+} from 'ag-grid-community';
 
 type Props = {
-  treeStore: TreeStore
+  treeStore: ITreeStore
 }
 const { treeStore } = defineProps<Props>()
 
-const getDataPath = computed(() => (data: any) => {
-  const path = [data.id]
-  let parentId = data.parent
+const defaultColDef = {
+  sortable: false,
+  filter: false,
+  resizable: false
+}
 
-  while (parentId) {
-    const parent = treeStore.getItem(parentId)
-    if (!parent) break
-    path.unshift(parent.id)
-    parentId = parent.parent
+const groupDefaultExpanded = ref(1)
+
+const rowData = computed(() => treeStore.getAll())
+
+const getDataPath = (data: Item) => {
+  const path = [String(data.id)];
+  let parentId = data.parent;
+
+  while (parentId !== null) {
+    const parent = treeStore.getItem(parentId);
+    if (!parent) break;
+    path.unshift(String(parent.id));
+    parentId = parent.parent;
   }
 
-  return path
-})
+  return path;
+};
 
-const columnDefs = ref([
+const columnDefs = ref<ColDef[]>([
   {
     headerName: '№ п/п',
     valueGetter: 'node.rowIndex + 1',
-    width: 100,
+    width: 20,
     pinned: 'left'
-  },
-  {
-    headerName: 'Категория',
-    valueGetter: (params: any) => {
-      return treeStore.getChildren(params.data.id).length > 0
-        ? 'Группа'
-        : 'Элемент'
-    },
-    width: 120
   },
   {
     headerName: 'Наименование',
     field: 'label',
-    flex: 1,
     cellRenderer: 'agGroupCellRenderer',
     cellRendererParams: {
       suppressCount: true
@@ -62,24 +69,17 @@ const columnDefs = ref([
   }
 ])
 
-const defaultColDef = ref({
-  sortable: true,
-  filter: true,
-  resizable: true
-})
-
-const autoGroupColumnDef = ref({
-  headerName: 'Группа',
+const autoGroupColumnDef = ref<ColDef>({
+  headerName: 'Категория',
   minWidth: 250,
   cellRendererParams: {
     suppressCount: true,
-    innerRenderer: (params: any) => params.data.label
-  }
-})
-
-const groupDefaultExpanded = ref(1)
-
-const rowData = computed(() => treeStore.getAll())
+    innerRenderer: (params: any) => {
+      const hasChildren = treeStore.getChildren(params.data.id).length > 0;
+      return hasChildren ? 'Группа' : 'Элемент';
+    },
+  },
+});
 
 const onGridReady = (params: any) => {
   params.api.sizeColumnsToFit()

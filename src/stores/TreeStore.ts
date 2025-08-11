@@ -1,6 +1,6 @@
-import type { Item } from '../types/tree'
+import type { ITreeStore, Item } from '../types/tree'
 
-export class TreeStore {
+export class TreeStore implements ITreeStore {
   private items: Item[]
   private itemsMap: Map<number | string, Item>
   private childrenMap: Map<number | string, Item[]>
@@ -113,7 +113,7 @@ export class TreeStore {
     if (parentChildren) {
       this.childrenMap.set(
         itemToRemove.parent,
-        parentChildren.filter((child) => child.id !== id),
+        parentChildren.filter((child) => child.id !== id)
       )
     }
 
@@ -132,7 +132,7 @@ export class TreeStore {
         if (oldParentChildren) {
           this.childrenMap.set(
             existingItem.parent,
-            oldParentChildren.filter((child) => child.id !== updatedItem.id),
+            oldParentChildren.filter((child) => child.id !== updatedItem.id)
           )
         }
       }
