@@ -21,6 +21,7 @@ import type { ITreeStore, Item } from '@/types/tree';
 import { AgGridVue } from 'ag-grid-vue3';
 import type {
   ColDef,
+  GridApi,
 } from 'ag-grid-community';
 
 type Props = {
@@ -54,10 +55,12 @@ const getDataPath = (data: Item) => {
 
 const columnDefs = ref<ColDef[]>([
   {
-    headerName: '№ п/п',
+    headerName: '№ п\\п',
+    colId: 'rowNumber',
     valueGetter: 'node.rowIndex + 1',
-    width: 20,
-    pinned: 'left'
+    width: 40,
+    pinned: 'left',
+    cellStyle: { 'font-weight': '600' },
   },
   {
     headerName: 'Наименование',
@@ -81,9 +84,23 @@ const autoGroupColumnDef = ref<ColDef>({
   },
 });
 
-const onGridReady = (params: any) => {
-  params.api.sizeColumnsToFit()
-}
+const gridApi = ref()
+
+const updateRowNumbers = (api: GridApi) => {
+  api.forEachNode((node, index) => {
+    node.setDataValue('rowNumber', index + 1);
+  });
+};
+
+const onGridReady = (params: { api: GridApi }) => {
+  gridApi.value = params.api;
+
+  params.api.sizeColumnsToFit();
+
+  params.api.addEventListener('filterChanged', () => updateRowNumbers(params.api));
+  params.api.addEventListener('sortChanged', () => updateRowNumbers(params.api));
+  params.api.addEventListener('rowGroupOpened', () => updateRowNumbers(params.api));
+};
 </script>
 
 <style scoped>
